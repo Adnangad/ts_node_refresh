@@ -10,10 +10,6 @@
     "start": "node dist/server.js",
     "test": "node test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://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@github.com/Adnangad/ts_node_refresh.git"
-  },
   "author": "Adnan Obuya",
   "license": "ISC",
   "type": "commonjs",
