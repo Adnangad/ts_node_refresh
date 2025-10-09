@@ -5,6 +5,7 @@ import hashPassword from "../utils/hash";
 import generateJWT from "../utils/jwt";
 import { sequelize } from "../config/database";
 import { myRequest } from "../utils/types";
+import { Op } from "sequelize";
 
 export const router = Router();
 
@@ -71,13 +72,52 @@ router.post("/create_task", async (req: myRequest, res) => {
         const user = await User.findByPk(req.user?.id);
         if (!user) return res.status(403).json({ message: "You are not saved in the db, create a new account and try again" })
         transaction = await sequelize.transaction();
-        const newTask = await Task.create({ taskName: taskName, userId: user.id });
+        const newTask = await Task.create({ taskName: taskName, userId: user.id }, { transaction });
         transaction.commit()
         return res.status(200).json({ message: "success", task: newTask });
     } catch (err) {
         console.error("Error creating Task:: ", err);
-        transaction?.rollback()
+        await transaction?.rollback()
         return res.status(500)
             .json({ status: 403, message: "Unable to create a task, please try again later" });
+    }
+});
+
+router.get("/get_tasks", async (req: myRequest, res) => {
+    try {
+        if (!req.user) return res.status(403).json({ status: 403, message: "You are yet to login" });
+        const user = await User.findByPk(req.user?.id);
+        if (!user) return res.status(403).json({ message: "You are not saved in the db, create a new account and try again" })
+        const tasks = await Task.findAll({ where: { userId: user.id } })
+        return res.status(200).json({ message: "success", tasks: tasks });
+    } catch (err) {
+        return res.status(500)
+            .json({ status: 403, message: "Unable to fetch  tasks, please try again later" });
+    }
+});
+
+router.put("/update_task/:taskId", async (req: myRequest, res) => {
+    let transaction;
+    try {
+        const taskId = Number(req.params.taskId);
+        if (!taskId) return res.status(403).json({ status: 403, message: "Invalid TaskId" });
+
+        if (!req.user) return res.status(403).json({ status: 403, message: "You are yet to login" });
+
+        const user = await User.findByPk(req.user?.id);
+        if (!user) return res.status(403).json({ message: "You are not saved in the db, create a new account and try again" })
+
+        const task = await Task.findOne({ where: { [Op.and]: [{ id: taskId }, { userId: user.id }] } });
+        if (!task) return res.status(403).json({ status: 403, message: "No such task exists" });
+
+        transaction = await sequelize.transaction();
+        task.accomplished = task.accomplished == true ? false : true;
+        await task.save({ transaction });
+        await transaction.commit()
+        return res.status(200).json({ message: "success", task: task });
+    } catch (err) {
+        await transaction?.rollback()
+        return res.status(500)
+            .json({ status: 403, message: "Unable to update task, please try again later" });
     }
 })
