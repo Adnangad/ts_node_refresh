@@ -1,6 +1,11 @@
 import { Model, DataTypes, Sequelize } from "sequelize";
 
- export class Task extends Model { };
+ export class Task extends Model {
+    declare id: number;
+    declare taskName: string;
+    declare accomplished: string;
+    declare createdAt: string;
+ };
 
 export default (sequelize: Sequelize) => {
     Task.init(

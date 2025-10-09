@@ -1,3 +1,4 @@
+import { Request } from "express";
 export interface TaskType {
     id: number;
     taskName: string;
@@ -10,4 +11,11 @@ export interface UserType {
     email: string;
     password: string;
     isAdmin: boolean;
+}
+
+export interface myRequest extends Request {
+    user?: {
+      id: string;
+      role: string;
+    };
 }

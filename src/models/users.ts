@@ -1,6 +1,12 @@
 import { Model, Sequelize, DataTypes } from "sequelize";
 
-export class User extends Model { };
+export class User extends Model {
+    declare id: number;
+    declare userName: string;
+    declare email: string;
+    declare password: string;
+    declare isAdmin: boolean;
+};
 
 export default (sequelize: Sequelize) => {
     User.init(
